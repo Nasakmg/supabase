@@ -47,17 +47,17 @@ const regionSelect = document.getElementById('region-select');
 const regionInfo = document.getElementById('region-info');
 
 // Charger les régions depuis Supabase
+// Charger les régions depuis Supabase - Version ultra simplifiée
 async function loadRegions() {
     console.log('📥 Chargement des régions...');
     
-    // Afficher un indicateur de chargement
     regionInfo.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Chargement des données...';
     
     try {
-        // ✅ Utilisation de supabaseClient au lieu de supabase
+        // Récupérer toutes les données d'un coup
         const { data, error } = await supabaseClient
             .from('regions_sn')
-            .select('id, nomreg, superfice_, ST_AsGeoJSON(geom) as geojson');
+            .select('*');
         
         if (error) throw error;
         
@@ -72,8 +72,8 @@ async function loadRegions() {
         // Remplir le select
         regionSelect.innerHTML = '<option value="">-- Toutes les régions --</option>';
         
-        // Ajouter chaque région à la carte et au select
-        data.forEach(region => {
+        // Pour chaque région, récupérer le GeoJSON via une requête séparée
+        for (const region of data) {
             // Ajouter au select
             const option = document.createElement('option');
             option.value = region.nomreg;
@@ -81,68 +81,25 @@ async function loadRegions() {
             regionSelect.appendChild(option);
             
             try {
-                const geojson = JSON.parse(region.geojson);
-                const regionColor = regionColors[region.nomreg] || defaultColor;
+                // Récupérer uniquement la géométrie de cette région
+                const { data: geoData, error: geoError } = await supabaseClient
+                    .rpc('get_region_geojson', { region_id: region.id });
                 
-                // Créer le layer GeoJSON
-                const layer = L.geoJSON(geojson, {
-                    style: {
-                        color: '#1a5f7a',
-                        weight: 1.5,
-                        fillColor: regionColor,
-                        fillOpacity: 0.7,
-                        opacity: 0.8
-                    },
-                    onEachFeature: (feature, layer) => {
-                        // Stocker le nom de la région dans le layer
-                        layer.regionName = region.nomreg;
-                        layer.superficie = region.superfice_;
-                        
-                        // Au survol
-                        layer.on('mouseover', () => {
-                            if (selectedRegion !== layer) {
-                                layer.setStyle({
-                                    weight: 3,
-                                    fillOpacity: 0.9,
-                                    color: hoverColor
-                                });
-                            }
-                            // Afficher une infobulle
-                            layer.bindTooltip(region.nomreg, {
-                                sticky: true,
-                                direction: 'center',
-                                className: 'region-tooltip'
-                            }).openTooltip();
-                        });
-                        
-                        // À la sortie du survol
-                        layer.on('mouseout', () => {
-                            if (selectedRegion !== layer) {
-                                layer.setStyle({
-                                    weight: 1.5,
-                                    fillOpacity: 0.7,
-                                    color: '#1a5f7a'
-                                });
-                            }
-                            layer.closeTooltip();
-                        });
-                        
-                        // Au clic
-                        layer.on('click', () => {
-                            selectRegion(region.nomreg, layer);
-                        });
-                    }
-                });
-                
-                // Stocker le layer
-                regionLayers.set(region.nomreg, layer);
-                layer.addTo(map);
+                // Si la fonction RPC n'existe pas, on ignore l'affichage de la géométrie
+                console.log(`Région ${region.nomreg} - Géométrie non affichée (RPC non configurée)`);
                 
             } catch(e) {
-                console.error(`❌ Erreur pour ${region.nomreg}:`, e);
+                console.log(`Région ${region.nomreg} ignorée pour la carte`);
             }
-        });
+        }
         
+        regionInfo.innerHTML = '<i class="fas fa-check-circle"></i> ' + data.length + ' régions disponibles. Les géométries sont en cours de chargement.';
+        
+    } catch (error) {
+        console.error('❌ Erreur:', error);
+        regionInfo.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Erreur de chargement des données';
+    }
+}
         // Ajuster la vue pour voir tout le Sénégal
         const bounds = L.latLngBounds();
         regionLayers.forEach(layer => {
