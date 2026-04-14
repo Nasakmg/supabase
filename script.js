@@ -2,7 +2,8 @@
 const SUPABASE_URL = 'https://revrsybyuldaihnssrhg.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_4fuRdk-P1B67ccxXauaTNQ_tpF8C-25';
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// ✅ Correction : utilisation d'un nom différent pour éviter le conflit
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Initialisation de la carte centrée sur le Sénégal
 const map = L.map('map').setView([14.5, -14.5], 7);
@@ -53,7 +54,8 @@ async function loadRegions() {
     regionInfo.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Chargement des données...';
     
     try {
-        const { data, error } = await supabase
+        // ✅ Utilisation de supabaseClient au lieu de supabase
+        const { data, error } = await supabaseClient
             .from('regions_sn')
             .select('id, nomreg, superfice_, ST_AsGeoJSON(geom) as geojson');
         
