@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Atlas du Sénégal - Carte interactive des régions</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Styles personnalisés -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- En-tête -->
+        <header class="header">
+            <div class="header-content">
+                <h1>
+                    <i class="fas fa-map-marked-alt"></i>
+                    Atlas du Sénégal
+                </h1>
+                <p>Découvrez les 14 régions du pays</p>
+            </div>
+        </header>
+
+        <!-- Contenu principal -->
+        <main class="main-content">
+            <!-- Panneau de contrôle -->
+            <div class="control-panel">
+                <div class="selector-group">
+                    <label for="region-select">
+                        <i class="fas fa-search-location"></i>
+                        Choisir une région :
+                    </label>
+                    <select id="region-select" class="region-select">
+                        <option value="">-- Toutes les régions --</option>
+                    </select>
+                </div>
+                <div class="info-group">
+                    <div class="info-card" id="region-info">
+                        <i class="fas fa-info-circle"></i>
+                        <span>Cliquez sur une région ou sélectionnez-la dans le menu</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Conteneur de la carte -->
+            <div id="map"></div>
+        </main>
+
+        <!-- Pied de page -->
+        <footer class="footer">
+            <p>
+                <i class="fas fa-database"></i> Données géospatiales : Supabase + PostGIS
+                | <i class="fas fa-map"></i> Fond de carte : OpenStreetMap
+            </p>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="script.js"></script>
+</body>
+</html>
