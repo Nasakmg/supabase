@@ -47,16 +47,17 @@ const regionSelect = document.getElementById('region-select');
 const regionInfo = document.getElementById('region-info');
 
 // Charger les régions depuis Supabase
+// Charger les régions depuis Supabase
 async function loadRegions() {
     console.log('📥 Chargement des régions...');
     
     regionInfo.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Chargement des données...';
     
     try {
-        // Récupérer toutes les données
+        // Récupérer toutes les données (sans la géométrie)
         const { data, error } = await supabaseClient
             .from('regions_sn')
-            .select('*');
+            .select('id, nomreg, superfice_');
         
         if (error) throw error;
         
@@ -71,7 +72,7 @@ async function loadRegions() {
         // Remplir le select
         regionSelect.innerHTML = '<option value="">-- Toutes les régions --</option>';
         
-        // Pour chaque région, récupérer le GeoJSON
+        // Pour chaque région, récupérer le GeoJSON via RPC
         for (const region of data) {
             // Ajouter au select
             const option = document.createElement('option');
@@ -80,19 +81,20 @@ async function loadRegions() {
             regionSelect.appendChild(option);
             
             try {
-                // Récupérer la géométrie GeoJSON
-                const { data: geomData, error: geomError } = await supabaseClient
-                    .from('regions_sn')
-                    .select('ST_AsGeoJSON(geom)')
-                    .eq('id', region.id)
-                    .single();
+                // ✅ Utilisation de la fonction RPC
+                const { data: geojson, error: rpcError } = await supabaseClient
+                    .rpc('get_region_geojson', { region_id: region.id });
                 
-                if (geomError || !geomData) {
+                if (rpcError) {
+                    console.log(`⚠️ RPC erreur pour ${region.nomreg}:`, rpcError);
+                    continue;
+                }
+                
+                if (!geojson) {
                     console.log(`⚠️ Pas de géométrie pour ${region.nomreg}`);
                     continue;
                 }
                 
-                const geojson = JSON.parse(geomData['ST_AsGeoJSON(geom)']);
                 const regionColor = regionColors[region.nomreg] || defaultColor;
                 
                 const layer = L.geoJSON(geojson, {
@@ -133,11 +135,36 @@ async function loadRegions() {
                 
                 regionLayers.set(region.nomreg, layer);
                 layer.addTo(map);
+                console.log(`✅ Géométrie ajoutée pour ${region.nomreg}`);
                 
             } catch(e) {
-                console.log(`⚠️ Géométrie non disponible pour ${region.nomreg}`);
+                console.log(`⚠️ Erreur pour ${region.nomreg}:`, e.message);
             }
         }
+        
+        // Ajuster la vue
+        const bounds = L.latLngBounds();
+        regionLayers.forEach(layer => {
+            layer.eachLayer(l => {
+                if (l.getBounds) {
+                    bounds.extend(l.getBounds());
+                }
+            });
+        });
+        
+        if (bounds.isValid()) {
+            map.fitBounds(bounds);
+        } else {
+            map.setView([14.5, -14.5], 7);
+        }
+        
+        regionInfo.innerHTML = '<i class="fas fa-check-circle"></i> ' + data.length + ' régions disponibles. Cliquez sur une région !';
+        
+    } catch (error) {
+        console.error('❌ Erreur:', error);
+        regionInfo.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Erreur de chargement des données';
+    }
+}
         
         // Ajuster la vue
         const bounds = L.latLngBounds();
