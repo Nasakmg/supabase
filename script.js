@@ -165,31 +165,6 @@ async function loadRegions() {
         regionInfo.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Erreur de chargement des données';
     }
 }
-        
-        // Ajuster la vue
-        const bounds = L.latLngBounds();
-        regionLayers.forEach(layer => {
-            layer.eachLayer(l => {
-                if (l.getBounds) {
-                    bounds.extend(l.getBounds());
-                }
-            });
-        });
-        
-        if (bounds.isValid()) {
-            map.fitBounds(bounds);
-        } else {
-            map.setView([14.5, -14.5], 7);
-        }
-        
-        regionInfo.innerHTML = '<i class="fas fa-check-circle"></i> ' + data.length + ' régions disponibles. Cliquez sur une région !';
-        
-    } catch (error) {
-        console.error('❌ Erreur:', error);
-        regionInfo.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Erreur de chargement des données';
-    }
-}
-
 // Fonction pour sélectionner une région
 function selectRegion(regionName, layer = null) {
     // Réinitialiser le style précédent
