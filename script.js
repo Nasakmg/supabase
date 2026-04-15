@@ -47,7 +47,6 @@ const regionSelect = document.getElementById('region-select');
 const regionInfo = document.getElementById('region-info');
 
 // Charger les régions depuis Supabase
-// Charger les régions depuis Supabase
 async function loadRegions() {
     console.log('📥 Chargement des régions...');
     
@@ -165,6 +164,7 @@ async function loadRegions() {
         regionInfo.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Erreur de chargement des données';
     }
 }
+
 // Fonction pour sélectionner une région
 function selectRegion(regionName, layer = null) {
     // Réinitialiser le style précédent
